@@ -15,24 +15,7 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { setCookie } from "../../../utils/utils";
-
-function Copyright(props: any) {
-  return (
-    <Typography
-      variant='body2'
-      color='text.secondary'
-      align='center'
-      {...props}
-    >
-      {"Copyright © "}
-      <Link color='inherit' href='https://mui.com/'>
-        Your Website
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
-    </Typography>
-  );
-}
+import Copyright from "../components/copyright";
 
 // TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
@@ -40,35 +23,40 @@ const defaultTheme = createTheme();
 export default function SignIn() {
   const router = useRouter();
 
-  const [jwtToken, setJwtToken] = React.useState<string | null>(null);
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const username = data.get("username");
+    console.log(
+      "🔫 *=+=> file: page.tsx:32 *=+=> handleSubmit *=+=> username:",
+      username
+    );
     const password = data.get("password");
     const requestBody = { username, password };
     const requestHeader = {
       "Content-Type": "application/json",
     };
 
-    fetch("http://localhost:3001/api/v1/auth/login", {
+    const response = await fetch("http://localhost:3001/api/v1/auth/login", {
       method: "POST",
       headers: requestHeader,
       body: JSON.stringify(requestBody),
-    })
-      .then((response) => response.json())
-      .then(({ data, message, statusCode }) => {
-        setJwtToken(data.access_token);
-      })
-      .catch((error) => {
-        throw error;
-      });
+    });
 
-    if (jwtToken) {
-      setCookie("token", jwtToken);
+    const {
+      data: { access_token },
+      message,
+      stausCode,
+    } = await response.json();
+    console.log(
+      "🔫 *=+=> file: page.tsx:49 *=+=> handleSubmit *=+=> responseData:",
+      access_token
+    );
 
-      if (localStorage.getItem("token")) router.push("/");
+    if (access_token) {
+      setCookie("token", access_token);
+      alert("already set");
+      router.push("/");
     }
   };
 
@@ -88,7 +76,7 @@ export default function SignIn() {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component='h1' variant='h5'>
-            Sign in
+            Sign-In
           </Typography>
           <Box
             component='form'
@@ -101,7 +89,7 @@ export default function SignIn() {
               required
               fullWidth
               id='username'
-              label='username'
+              label='Username'
               name='username'
               autoComplete='username'
               autoFocus
